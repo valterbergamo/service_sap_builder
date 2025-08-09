@@ -1,0 +1,80 @@
+<core:FragmentDefinition
+	xmlns:m="sap.m"
+    xmlns="sap.m" 
+	xmlns:core="sap.ui.core">
+		
+        <m:Button
+            id="sideNavigationTogglem:Button"
+            icon="sap-icon://menu2"
+            type="Transparent"
+            press="onCollapseExpandPress"
+            tooltip="Expandir/Retrair">
+            <layoutData>
+                <OverflowToolbarLayoutData priority="NeverOverflow"/>
+            </layoutData>
+        </m:Button>
+        <ToolbarSpacer/>
+        
+        <Title
+            text="{i18n>appTitle}"
+            level="H2"/>
+        <ToolbarSpacer/>
+        
+        
+        <m:Button
+            id="Button:fullScreen"
+            icon="sap-icon://full-screen"
+            type="Transparent"
+            press="onFullScreen"
+            visible="false">
+            <layoutData>
+                <OverflowToolbarLayoutData closeOverflowOnInteraction="false"/>
+            </layoutData>
+        </m:Button>
+
+        <m:Button
+            id="Button:exitFullScreen"
+            icon="sap-icon://exit-full-screen"
+            type="Transparent"
+            press="onFullScreen"
+            visible="false">
+            <layoutData>
+                <OverflowToolbarLayoutData closeOverflowOnInteraction="false"/>
+            </layoutData>
+        </m:Button>
+
+        <m:Button
+            id="Button:Notification"
+            icon="sap-icon://ui-notifications"
+            visible="false"
+            type="Transparent"
+            press="onTeste">
+            <layoutData>
+                <OverflowToolbarLayoutData closeOverflowOnInteraction="false"/>
+            </layoutData>
+        </m:Button>
+        
+        <m:Button id="Button:Logout"     
+                text="{token>/Name1}" 
+                visible="{token>/Logged}"    
+                icon="sap-icon://disconnected"  
+                press="onLogout" 
+                type="Transparent">
+            <layoutData>
+                <OverflowToolbarLayoutData closeOverflowOnInteraction="false"/>
+            </layoutData>
+        </m:Button>
+		
+        <m:Button 
+            id="Button:Login"      
+            text="Login"                  
+            visible="{= ${token>/Logged} === false &amp;&amp; ${screenControl>/config/Login} === true }"     
+            icon="sap-icon://visits"               
+            press="onPopupLogin"  
+            type="Transparent">
+            <layoutData>
+                <OverflowToolbarLayoutData closeOverflowOnInteraction="false"/>
+            </layoutData>
+        </m:Button>
+
+</core:FragmentDefinition>

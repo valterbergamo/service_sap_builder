@@ -8,7 +8,8 @@ const router = Router();
 
 const createProjectBody = z.object({
 	id: z.string().min(1).max(64),
-	meta: z.record(z.any()).optional()
+	meta: z.record(z.any()).optional(),
+	template: z.string().optional() // novo parâmetro para especificar o template
 });
 
 // POST /projects -> cria projects/{id}
@@ -23,7 +24,7 @@ router.post('/', async (req, res, next) => {
 				.json({ error: 'Payload inválido', details: parsed.error.flatten() });
 		}
 
-		const { id, meta } = parsed.data;
+		const { id, meta, template } = parsed.data;
 		if (!isValidProjectId(id)) {
 			return res.status(400).json({
 				error: 'id inválido. Use apenas letras, números, hífen e sublinhado (1–64 chars).'
@@ -40,11 +41,43 @@ router.post('/', async (req, res, next) => {
 			if (e.code !== 'EEXIST') throw e;
 		}
 
+		// Se um template foi especificado, copiar os arquivos do template
+		if (template) {
+			const templatesDir = path.join(__dirname, '../../templates');
+			const templatePath = path.join(templatesDir, template);
+			
+			try {
+				// Verificar se o template existe
+				const templateStat = await fs.stat(templatePath);
+				if (!templateStat.isDirectory()) {
+					return res.status(400).json({
+						error: `Template '${template}' não é um diretório válido`
+					});
+				}
+
+				// Copiar arquivos do template para o projeto
+				await copyDirectory(templatePath, projectPath);
+			} catch (e) {
+				if (e.code === 'ENOENT') {
+					return res.status(400).json({
+						error: `Template '${template}' não encontrado`
+					});
+				}
+				throw e;
+			}
+		}
+
 		if (meta && typeof meta === 'object') {
 			const metaPath = path.join(projectPath, 'project.json');
+			const projectData = { 
+				id, 
+				meta, 
+				template: template || null,
+				createdAt: new Date().toISOString() 
+			};
 			await fs.writeFile(
 				metaPath,
-				JSON.stringify({ id, meta, createdAt: new Date().toISOString() }, null, 2)
+				JSON.stringify(projectData, null, 2)
 			);
 		}
 
@@ -52,12 +85,30 @@ router.post('/', async (req, res, next) => {
 			id,
 			baseDir: BASE_DIR,
 			path: projectPath,
+			template: template || null,
 			created
 		});
 	} catch (err) {
 		next(err);
 	}
 });
+
+// Função auxiliar para copiar diretório recursivamente
+async function copyDirectory(src, dest) {
+	const entries = await fs.readdir(src, { withFileTypes: true });
+	
+	for (const entry of entries) {
+		const srcPath = path.join(src, entry.name);
+		const destPath = path.join(dest, entry.name);
+		
+		if (entry.isDirectory()) {
+			await fs.mkdir(destPath, { recursive: true });
+			await copyDirectory(srcPath, destPath);
+		} else if (entry.isFile()) {
+			await fs.copyFile(srcPath, destPath);
+		}
+	}
+}
 
 /* =============================
  *  NOVO: salvar arquivo

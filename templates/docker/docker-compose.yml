@@ -1,0 +1,21 @@
+services:
+  sapui5-app:
+    build: .
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=1
+    ports:
+      - "8006:8081"
+    volumes:
+      - ./webapp:/home/node/app/webapp:delegated   # <-- só o fonte
+      - ui5_node_modules:/home/node/app/node_modules  # persiste deps dentro do contêiner
+    networks:
+      - projectid-network
+
+volumes:
+  ui5_node_modules:
+
+networks:
+  projectid-network:
+    driver: bridge
