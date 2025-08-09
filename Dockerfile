@@ -1,7 +1,7 @@
 FROM node:18-alpine
 
-# Instalar Docker CLI
-RUN apk add --no-cache docker-cli
+# Instalar Docker CLI e Docker Compose
+RUN apk add --no-cache docker-cli docker-compose
 
 WORKDIR /home/node/app
 
