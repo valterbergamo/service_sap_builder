@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  service-sap-builder:
+    build: .
+    container_name: sap-builder-backend
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    ports:
+      - "7777:3000"  # Porta externa 7777 -> porta interna 3000
+    volumes:
+      - ./projects:/home/node/app/projects  # Persistir projetos
+      - /var/run/docker.sock:/var/run/docker.sock  # Para Docker-in-Docker
+    restart: unless-stopped
+    networks:
+      - sap-builder-network
+
+networks:
+  sap-builder-network:
+    driver: bridge
