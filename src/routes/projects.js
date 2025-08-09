@@ -498,8 +498,8 @@ router.post('/:id/docker/start', async (req, res, next) => {
 		// Escrever docker-compose.yml personalizado
 		await fs.writeFile(dockerComposePath, dockerComposeContent);
 
-		// Executar docker-compose up
-		const dockerComposeCmd = `docker-compose up -d --build`;
+		// Executar docker compose up (sem hífen)
+		const dockerComposeCmd = `docker compose up -d --build`;
 		
 		try {
 			const { stdout, stderr } = await execAsync(dockerComposeCmd, {
@@ -575,8 +575,8 @@ router.post('/:id/docker/stop', async (req, res, next) => {
 			});
 		}
 
-		// Executar docker-compose down
-		const dockerComposeCmd = `docker-compose down`;
+		// Executar docker compose down (sem hífen)
+		const dockerComposeCmd = `docker compose down`;
 		
 		try {
 			const { stdout, stderr } = await execAsync(dockerComposeCmd, {
