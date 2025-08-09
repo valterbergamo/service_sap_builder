@@ -440,3 +440,269 @@ router.get('/:id/tree', async (req, res, next) => {
 
 
 module.exports = router;
+const { spawn, exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
+
+// =============================
+// POST /projects/:id/docker/start
+// Cria e inicia um container Docker para o projeto
+// =============================
+router.post('/:id/docker/start', async (req, res, next) => {
+	try {
+		await ensureBaseDir();
+
+		const { id } = req.params;
+		if (!isValidProjectId(id)) {
+			return res.status(400).json({ error: 'project id inválido' });
+		}
+
+		const projectPath = resolveProjectPath(id);
+
+		// Verificar se o projeto existe
+		try {
+			const stat = await fs.stat(projectPath);
+			if (!stat.isDirectory()) throw new Error('Projeto não é um diretório');
+		} catch (e) {
+			if (e.code === 'ENOENT') {
+				return res.status(404).json({ error: 'Projeto não encontrado' });
+			}
+			throw e;
+		}
+
+		// Copiar arquivos Docker para o projeto
+		const templatesDir = path.join(__dirname, '../../templates');
+		const dockerTemplatePath = path.join(templatesDir, 'docker');
+		
+		const dockerfilePath = path.join(projectPath, 'Dockerfile');
+		const dockerComposePath = path.join(projectPath, 'docker-compose.yml');
+
+		// Copiar Dockerfile
+		await fs.copyFile(
+			path.join(dockerTemplatePath, 'Dockerfile'),
+			dockerfilePath
+		);
+
+		// Ler e personalizar docker-compose.yml
+		let dockerComposeContent = await fs.readFile(
+			path.join(dockerTemplatePath, 'docker-compose.yml'),
+			'utf8'
+		);
+
+		// Substituir placeholders com dados específicos do projeto
+		dockerComposeContent = dockerComposeContent
+			.replace(/projectid-network/g, `${id}-network`)
+			.replace(/ui5_node_modules/g, `${id}_node_modules`)
+			.replace(/sapui5-app/g, `${id}-app`);
+
+		// Escrever docker-compose.yml personalizado
+		await fs.writeFile(dockerComposePath, dockerComposeContent);
+
+		// Executar docker-compose up
+		const dockerComposeCmd = `docker-compose up -d --build`;
+		
+		try {
+			const { stdout, stderr } = await execAsync(dockerComposeCmd, {
+				cwd: projectPath,
+				timeout: 120000 // 2 minutos timeout
+			});
+
+			console.log('Docker Compose Output:', stdout);
+			if (stderr) console.log('Docker Compose Stderr:', stderr);
+
+			// Extrair porta do docker-compose.yml para retornar na resposta
+			const portMatch = dockerComposeContent.match(/"(\d+):\d+"/);
+			const exposedPort = portMatch ? portMatch[1] : '8006';
+
+			return res.status(201).json({
+				projectId: id,
+				status: 'started',
+				containerName: `${id}-app`,
+				networkName: `${id}-network`,
+				exposedPort: exposedPort,
+				url: `http://localhost:${exposedPort}`,
+				stdout: stdout,
+				message: 'Container Docker criado e iniciado com sucesso'
+			});
+
+		} catch (error) {
+			console.error('Erro ao executar docker-compose:', error);
+			return res.status(500).json({
+				error: 'Erro ao criar container Docker',
+				details: error.message,
+				stderr: error.stderr
+			});
+		}
+
+	} catch (err) {
+		next(err);
+	}
+});
+
+// =============================
+// POST /projects/:id/docker/stop
+// Para o container Docker do projeto
+// =============================
+router.post('/:id/docker/stop', async (req, res, next) => {
+	try {
+		await ensureBaseDir();
+
+		const { id } = req.params;
+		if (!isValidProjectId(id)) {
+			return res.status(400).json({ error: 'project id inválido' });
+		}
+
+		const projectPath = resolveProjectPath(id);
+
+		// Verificar se o projeto existe
+		try {
+			const stat = await fs.stat(projectPath);
+			if (!stat.isDirectory()) throw new Error('Projeto não é um diretório');
+		} catch (e) {
+			if (e.code === 'ENOENT') {
+				return res.status(404).json({ error: 'Projeto não encontrado' });
+			}
+			throw e;
+		}
+
+		// Verificar se existe docker-compose.yml
+		const dockerComposePath = path.join(projectPath, 'docker-compose.yml');
+		try {
+			await fs.stat(dockerComposePath);
+		} catch (e) {
+			return res.status(400).json({ 
+				error: 'Container Docker não foi iniciado para este projeto' 
+			});
+		}
+
+		// Executar docker-compose down
+		const dockerComposeCmd = `docker-compose down`;
+		
+		try {
+			const { stdout, stderr } = await execAsync(dockerComposeCmd, {
+				cwd: projectPath,
+				timeout: 60000 // 1 minuto timeout
+			});
+
+			console.log('Docker Compose Down Output:', stdout);
+			if (stderr) console.log('Docker Compose Down Stderr:', stderr);
+
+			return res.status(200).json({
+				projectId: id,
+				status: 'stopped',
+				stdout: stdout,
+				message: 'Container Docker parado com sucesso'
+			});
+
+		} catch (error) {
+			console.error('Erro ao parar docker-compose:', error);
+			return res.status(500).json({
+				error: 'Erro ao parar container Docker',
+				details: error.message,
+				stderr: error.stderr
+			});
+		}
+
+	} catch (err) {
+		next(err);
+	}
+});
+
+// =============================
+// GET /projects/:id/docker/status
+// Verifica o status do container Docker do projeto
+// =============================
+router.get('/:id/docker/status', async (req, res, next) => {
+	try {
+		await ensureBaseDir();
+
+		const { id } = req.params;
+		if (!isValidProjectId(id)) {
+			return res.status(400).json({ error: 'project id inválido' });
+		}
+
+		const projectPath = resolveProjectPath(id);
+
+		// Verificar se o projeto existe
+		try {
+			const stat = await fs.stat(projectPath);
+			if (!stat.isDirectory()) throw new Error('Projeto não é um diretório');
+		} catch (e) {
+			if (e.code === 'ENOENT') {
+				return res.status(404).json({ error: 'Projeto não encontrado' });
+			}
+			throw e;
+		}
+
+		// Verificar se existe docker-compose.yml
+		const dockerComposePath = path.join(projectPath, 'docker-compose.yml');
+		let hasDockerCompose = false;
+		try {
+			await fs.stat(dockerComposePath);
+			hasDockerCompose = true;
+		} catch (e) {
+			// Arquivo não existe
+		}
+
+		if (!hasDockerCompose) {
+			return res.status(200).json({
+				projectId: id,
+				status: 'not_configured',
+				message: 'Container Docker não foi configurado para este projeto'
+			});
+		}
+
+		// Verificar status dos containers
+		const dockerPsCmd = `docker-compose ps --format json`;
+		
+		try {
+			const { stdout, stderr } = await execAsync(dockerPsCmd, {
+				cwd: projectPath,
+				timeout: 30000 // 30 segundos timeout
+			});
+
+			let containers = [];
+			if (stdout.trim()) {
+				// Parse JSON output (cada linha é um JSON)
+				const lines = stdout.trim().split('\n');
+				containers = lines.map(line => {
+					try {
+						return JSON.parse(line);
+					} catch (e) {
+						return null;
+					}
+				}).filter(Boolean);
+			}
+
+			const isRunning = containers.some(container => 
+				container.State === 'running' || container.State === 'Up'
+			);
+
+			// Extrair porta do docker-compose.yml
+			const dockerComposeContent = await fs.readFile(dockerComposePath, 'utf8');
+			const portMatch = dockerComposeContent.match(/"(\d+):\d+"/);
+			const exposedPort = portMatch ? portMatch[1] : null;
+
+			return res.status(200).json({
+				projectId: id,
+				status: isRunning ? 'running' : 'stopped',
+				containers: containers,
+				exposedPort: exposedPort,
+				url: exposedPort ? `http://localhost:${exposedPort}` : null,
+				message: isRunning ? 'Container está rodando' : 'Container está parado'
+			});
+
+		} catch (error) {
+			console.error('Erro ao verificar status docker-compose:', error);
+			return res.status(500).json({
+				error: 'Erro ao verificar status do container',
+				details: error.message
+			});
+		}
+
+	} catch (err) {
+		next(err);
+	}
+});
+
+module.exports = router;
