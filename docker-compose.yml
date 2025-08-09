@@ -8,11 +8,14 @@ services:
       - NODE_ENV=development
       - PORT=3000
     ports:
-      - "7777:3000"  # Porta externa 7777 -> porta interna 3000
+      - "7777:3000"
     volumes:
-      - ./projects:/home/node/app/projects  # Persistir projetos
-      - /var/run/docker.sock:/var/run/docker.sock  # Para Docker-in-Docker
+      # Criar volume com permissões corretas
+      - ./projects:/home/node/app/projects:rw
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+    # Garantir que o usuário correto seja usado
+    user: "1000:1000"  # UID do usuário node
     networks:
       - sap-builder-network
 
