@@ -1,0 +1,11 @@
+.customSimpleForm {
+    background-color: white; /* Define o fundo como transparente ou a cor desejada */
+    color: #000000; /* Define a cor do texto, se necessário */
+    /* Adicione mais estilos conforme necessário */
+  }
+
+  .myCustomSelect {
+    white-space: nowrap; /* Evita quebra de linha */
+    overflow: hidden; /* Oculta texto que não cabe */
+    text-overflow: ellipsis; /* Adiciona reticências para indicar texto truncado */
+}

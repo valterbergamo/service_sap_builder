@@ -1,0 +1,25 @@
+<mvc:View
+    controllerName="xcop.fsc.service.controller.Home"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+>
+    <Page
+        showHeader="true"
+        title="{i18n>homeTitle}"
+    >
+        <l:BlockLayout
+            background="Default"
+        >
+            <l:BlockLayoutRow>
+                <l:BlockLayoutCell
+                    backgroundColorSet="ColorSet9"
+                    width="3"
+                >
+                    
+                </l:BlockLayoutCell>
+            </l:BlockLayoutRow>
+        </l:BlockLayout>
+    </Page>
+</mvc:View>
