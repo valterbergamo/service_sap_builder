@@ -7,7 +7,7 @@ default-*.json
 .cdsrc-private.json
 gen/
 node_modules/
-projetcts/
+projects/
 target/
 
 # Web IDE, App Studio

@@ -10,12 +10,10 @@ services:
     ports:
       - "7777:3000"
     volumes:
-      # Criar volume com permissões corretas
       - ./projects:/home/node/app/projects:rw
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./templates:/home/node/app/templates:ro
+      - /var/run/docker.sock:/var/run/docker.sock  # ← Importante!
     restart: unless-stopped
-    # Garantir que o usuário correto seja usado
-    user: "1000:1000"  # UID do usuário node
     networks:
       - sap-builder-network
 
