@@ -7,14 +7,14 @@ services:
       - CHOKIDAR_USEPOLLING=1
     ports:
       - "8006:8081"
-    volumes:
-      - ./webapp:/home/node/app/webapp:delegated   # <-- só o fonte
-      - ui5_node_modules:/home/node/app/node_modules  # persiste deps dentro do contêiner
+    # volumes:
+    #   - ./webapp:/home/node/app/webapp:delegated
+    #   - ui5_node_modules:/home/node/app/node_modules
     networks:
       - sap-builder-network
 
-volumes:
-  ui5_node_modules:
+# volumes:
+#   ui5_node_modules:
 
 networks:
   sap-builder-network:
