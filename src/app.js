@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 
 const projectsRouter = require('./routes/projects');
+const embeddingsRouter = require('./routes/embeddings');
 const errorHandler = require('./middlewares/error');
 
 const app = express();
@@ -22,6 +23,9 @@ app.get('/test', (_req, res) => res.json({ message: 'ok' }));
 
 // Rotas de projetos
 app.use('/projects', projectsRouter);
+
+// Rotas de embeddings
+app.use('/embeddings', embeddingsRouter);
 
 // Handler central de erros
 app.use(errorHandler);
