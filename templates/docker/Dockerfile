@@ -3,7 +3,7 @@ WORKDIR /home/node/app
 
 # deps fixas na imagem
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # resto do projeto (ui5.yaml, fiori tools, etc.)
 COPY . .
