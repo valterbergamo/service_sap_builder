@@ -6,6 +6,88 @@ const openai = new OpenAI({
 });
 
 /**
+ * Detectar idioma e traduzir para inglês preservando termos técnicos SAP
+ * @param {string} text - Texto para traduzir
+ * @param {string} sourceLanguage - Idioma de origem (opcional, 'auto' para detectar)
+ * @returns {Promise<{originalText: string, translatedText: string, wasTranslated: boolean, detectedLanguage: string, technicalTerms: string[]}>}
+ */
+async function translateToEnglishPreservingTechnicalTerms(text, sourceLanguage = 'auto') {
+	try {
+		console.log('🌐 Iniciando tradução inteligente:', { 
+			textLength: text.length, 
+			sourceLanguage 
+		});
+		
+		const response = await openai.chat.completions.create({
+			model: 'gpt-3.5-turbo',
+			messages: [
+				{
+					role: 'system',
+					content: `You are a specialized translator for SAP technical documentation. Your task is to:
+
+1. DETECT the language of the input text
+2. If it's already English, return it unchanged
+3. If it's another language, translate to English while PRESERVING:
+   - SAP technical terms (MATNR, WERKS, BAPI, IDOC, etc.)
+   - Programming keywords and field names
+   - Database table names and field names
+   - Function module names
+   - Transaction codes (T-codes)
+   - Any UPPERCASE technical identifiers
+
+4. Return a JSON response with this exact structure:
+{
+  "detectedLanguage": "language_code",
+  "translatedText": "translated_content",
+  "wasTranslated": boolean,
+  "technicalTerms": ["array", "of", "preserved", "terms"]
+}
+
+Examples of terms to NEVER translate:
+- MATNR, WERKS, LGORT, BUKRS
+- BAPI_MATERIAL_GET, BAPI_CUSTOMER_CREATE
+- MARA, MARC, MARD (table names)
+- SE80, SM30, SPRO (transaction codes)
+- ABAP, SAPUI5, OData`
+				},
+				{
+					role: 'user',
+					content: text
+				}
+			],
+			temperature: 0.1,
+			max_tokens: 2000
+		});
+
+		const result = JSON.parse(response.choices[0].message.content);
+		
+		console.log('✅ Tradução concluída:', {
+			detectedLanguage: result.detectedLanguage,
+			wasTranslated: result.wasTranslated,
+			technicalTermsCount: result.technicalTerms?.length || 0
+		});
+
+		return {
+			originalText: text,
+			translatedText: result.translatedText,
+			wasTranslated: result.wasTranslated,
+			detectedLanguage: result.detectedLanguage,
+			technicalTerms: result.technicalTerms || []
+		};
+	} catch (error) {
+		console.error('❌ Erro na tradução:', error.message);
+		// Em caso de erro, retorna o texto original
+		return {
+			originalText: text,
+			translatedText: text,
+			wasTranslated: false,
+			detectedLanguage: 'unknown',
+			technicalTerms: []
+		};
+	}
+}
+
+/**
  * Gerar embedding de um texto usando OpenAI
  * @param {string} text - Texto para gerar embedding
  * @param {string} model - Modelo a usar (padrão: text-embedding-3-small)
@@ -80,37 +162,41 @@ function cleanTextForEmbedding(text) {
 }
 
 /**
- * Dividir texto grande em chunks menores
+ * Dividir texto em chunks baseado em palavras (configurável via .env)
  * @param {string} text - Texto completo
- * @param {number} maxChunkSize - Tamanho máximo do chunk
- * @param {number} overlap - Sobreposição entre chunks
+ * @param {number} maxWords - Máximo de palavras por chunk (opcional)
+ * @param {number} overlap - Sobreposição em palavras (opcional)
  * @returns {string[]} Array de chunks
  */
-function splitTextIntoChunks(text, maxChunkSize = 1000, overlap = 100) {
+function splitTextIntoChunks(text, maxWords = null, overlap = null) {
+	// Usar configurações do .env ou valores padrão
+	const maxWordsToUse = maxWords || parseInt(process.env.CHUNK_MAX_WORDS) || 50;
+	const overlapToUse = overlap || parseInt(process.env.CHUNK_OVERLAP_WORDS) || 25;
+	
+	console.log('✂️ Dividindo texto em chunks:', { 
+		textLength: text.length, 
+		maxWords: maxWordsToUse, 
+		overlap: overlapToUse 
+	});
+
+	const words = text.split(/\s+/);
 	const chunks = [];
-	let start = 0;
 
-	while (start < text.length) {
-		let end = start + maxChunkSize;
-		
-		// Se não é o último chunk, tenta quebrar em uma palavra
-		if (end < text.length) {
-			const lastSpace = text.lastIndexOf(' ', end);
-			if (lastSpace > start) {
-				end = lastSpace;
-			}
+	for (let i = 0; i < words.length; i += (maxWordsToUse - overlapToUse)) {
+		const chunk = words.slice(i, i + maxWordsToUse).join(' ');
+		if (chunk.trim()) {
+			chunks.push(chunk.trim());
 		}
-
-		chunks.push(text.substring(start, end).trim());
-		start = end - overlap;
 	}
 
-	return chunks.filter(chunk => chunk.length > 0);
+	console.log('✅ Chunks criados:', chunks.length);
+	return chunks;
 }
 
 module.exports = {
 	generateEmbedding,
 	generateEmbeddings,
 	cleanTextForEmbedding,
-	splitTextIntoChunks
+	splitTextIntoChunks,
+	translateToEnglishPreservingTechnicalTerms
 };

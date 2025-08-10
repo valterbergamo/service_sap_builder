@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Documentos SAP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 20px;
+            border: 3px dashed #4CAF50;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .file-upload-label:hover {
+            background: #e8f5e8;
+            border-color: #45a049;
+        }
+
+        .file-upload-label.dragover {
+            background: #e8f5e8;
+            border-color: #45a049;
+            transform: scale(1.02);
+        }
+
+        .file-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .help-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Upload de Documentos SAP</h1>
+            <p>Faça upload de documentos para processamento automático com IA</p>
+        </div>
+
+        <div class="form-container">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="docTitle">Título do Documento (docTitle) *</label>
+                    <input type="text" id="docTitle" name="docTitle" required 
+                           placeholder="Ex: class sap.m.Table">
+                    <div class="help-text">
+                        Título técnico do documento SAP
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="docUrl">URL da Documentação (docUrl) *</label>
+                    <input type="url" id="docUrl" name="docUrl" required 
+                           placeholder="https://sapui5.hana.ondemand.com/#/api/sap.m.Table">
+                    <div class="help-text">
+                        Link oficial da documentação SAP
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="sapClass">Classe SAP (sapClass) *</label>
+                    <input type="text" id="sapClass" name="sapClass" required 
+                           placeholder="Ex: sap.m">
+                    <div class="help-text">
+                        Namespace ou classe principal do componente
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="sapComponent">Componente SAP (sapComponent) *</label>
+                    <input type="text" id="sapComponent" name="sapComponent" required 
+                           placeholder="Ex: Table">
+                    <div class="help-text">
+                        Nome específico do componente SAP
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="docSection">Seção do Documento (docSection) *</label>
+                    <input type="text" id="docSection" name="docSection" required 
+                           placeholder="Ex: Controls">
+                    <div class="help-text">
+                        Categoria ou seção onde o documento se enquadra
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="language">Idioma do Documento</label>
+                    <select id="language" name="language">
+                        <option value="auto">Detectar automaticamente</option>
+                        <option value="pt">Português</option>
+                        <option value="en">Inglês</option>
+                        <option value="es">Espanhol</option>
+                        <option value="de">Alemão</option>
+                        <option value="fr">Francês</option>
+                    </select>
+                    <div class="help-text">
+                        Se não for inglês, será traduzido automaticamente para otimizar as buscas
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="searchMetadata">Metadados de Busca (JSON) - Opcional</label>
+                    <textarea id="searchMetadata" name="searchMetadata" rows="8" 
+                              placeholder='{ 
+  "doc_id": "sap.m.Table#properties.layout", 
+  "product": "SAPUI5", 
+  "control": "sap.m.Table", 
+  "section": "Properties", 
+  "since": ["1.16","1.22","1.52","1.76"], 
+  "aliases": ["Responsive Table","m.Table"], 
+  "keywords": ["autoPopinMode","hiddenInPopin","popinLayout"], 
+  "language": "en", 
+  "version": "1.120", 
+  "last_reviewed_utc": "2025-01-10" 
+}'></textarea>
+                    <div class="help-text">
+                        JSON com metadados estruturados para melhorar a busca. Deixe vazio para usar apenas os metadados básicos.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="document">Arquivo do Documento (content) *</label>
+                    <div class="file-upload">
+                        <input type="file" id="document" name="document" accept=".txt,.md,.pdf,.docx" required>
+                        <label for="document" class="file-upload-label" id="fileLabel">
+                            <div style="font-size: 2em; margin-bottom: 10px;">📁</div>
+                            <div><strong>Clique aqui ou arraste um arquivo</strong></div>
+                            <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                                Formatos suportados: .txt, .md, .pdf, .docx<br>
+                                Tamanho máximo: 10MB<br>
+                                O conteúdo do arquivo será usado como campo "content"
+                            </div>
+                        </label>
+                        <div class="file-info" id="fileInfo"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    🚀 Processar Documento SAP
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>Processando documento SAP...</div>
+                <div style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                    Isso pode levar alguns segundos dependendo do tamanho do arquivo
+                </div>
+            </div>
+
+            <div class="result" id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('document');
+        const fileLabel = document.getElementById('fileLabel');
+        const fileInfo = document.getElementById('fileInfo');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+
+        // Drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileLabel.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            fileLabel.classList.remove('dragover');
+        }
+
+        fileLabel.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            handleFileSelect();
+        }
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (file) {
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                fileInfo.innerHTML = `
+                    <strong>Arquivo selecionado:</strong><br>
+                    📄 ${file.name}<br>
+                    📊 ${fileSize} MB<br>
+                    🗂️ ${file.type || 'Tipo não identificado'}
+                `;
+                fileInfo.style.display = 'block';
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            
+            // Validar e processar searchMetadata se fornecido
+            const searchMetadataText = document.getElementById('searchMetadata').value.trim();
+            if (searchMetadataText) {
+                try {
+                    // Validar se é JSON válido
+                    JSON.parse(searchMetadataText);
+                    // NÃO fazer JSON.stringify novamente - enviar como string
+                    formData.set('searchMetadata', searchMetadataText);
+                } catch (error) {
+                    alert('❌ Erro no JSON dos Metadados de Busca:\n' + error.message);
+                    return;
+                }
+            }
+            
+            // Show loading
+            form.style.display = 'none';
+            loading.style.display = 'block';
+            result.style.display = 'none';
+
+            try {
+                const response = await fetch('/embeddings/upload-document', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult('success', `
+                        <h3>✅ Documento SAP processado com sucesso!</h3>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${data.documentId}</div>
+                                <div class="stat-label">ID do Documento</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${data.totalChunks}</div>
+                                <div class="stat-label">Chunks Gerados</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${(data.fileSize / 1024).toFixed(1)}KB</div>
+                                <div class="stat-label">Tamanho</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${data.originalLanguage.toUpperCase()}</div>
+                                <div class="stat-label">Idioma</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 15px;">
+                            <strong>Título:</strong> ${data.metadata.docTitle}<br>
+                            <strong>Classe SAP:</strong> ${data.metadata.sapClass}<br>
+                            <strong>Componente:</strong> ${data.metadata.sapComponent}<br>
+                            <strong>Seção:</strong> ${data.metadata.docSection}<br>
+                            <strong>URL:</strong> <a href="${data.metadata.docUrl}" target="_blank">${data.metadata.docUrl}</a><br>
+                            <strong>Traduzido:</strong> ${data.wasTranslated ? 'Sim' : 'Não'}
+                        </p>
+                        <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                            ${data.message}
+                        </p>
+                    `);
+                } else {
+                    showResult('error', `
+                        <h3>❌ Erro ao processar documento</h3>
+                        <p><strong>Erro:</strong> ${data.error}</p>
+                        ${data.details ? `<p><strong>Detalhes:</strong> ${JSON.stringify(data.details, null, 2)}</p>` : ''}
+                    `);
+                }
+            } catch (error) {
+                showResult('error', `
+                    <h3>❌ Erro de conexão</h3>
+                    <p>Não foi possível conectar ao servidor. Verifique se o serviço está rodando.</p>
+                    <p><strong>Erro:</strong> ${error.message}</p>
+                `);
+            }
+        });
+
+        function showResult(type, content) {
+            loading.style.display = 'none';
+            result.className = `result ${type}`;
+            result.innerHTML = content;
+            result.style.display = 'block';
+            
+            // Scroll to result
+            result.scrollIntoView({ behavior: 'smooth' });
+            
+            // Show form again after 3 seconds for success, immediately for error
+            setTimeout(() => {
+                form.style.display = 'block';
+            }, type === 'success' ? 3000 : 0);
+        }
+    </script>
+</body>
+</html>
