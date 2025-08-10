@@ -11,11 +11,11 @@ services:
       - ./webapp:/home/node/app/webapp:delegated   # <-- só o fonte
       - ui5_node_modules:/home/node/app/node_modules  # persiste deps dentro do contêiner
     networks:
-      - projectid-network
+      - sap-builder-network
 
 volumes:
   ui5_node_modules:
 
 networks:
-  projectid-network:
+  sap-builder-network:
     driver: bridge

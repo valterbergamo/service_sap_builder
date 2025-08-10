@@ -502,9 +502,13 @@ router.post('/:id/docker/start', async (req, res, next) => {
 		const dockerComposeCmd = `docker compose up -d --build`;
 		
 		try {
+			console.log('Project Path:', projectPath);
+			console.log('Current Working Directory:', process.cwd());
+			console.log('Docker Compose Command:', dockerComposeCmd);
+
 			const { stdout, stderr } = await execAsync(dockerComposeCmd, {
 				cwd: projectPath,
-				timeout: 120000 // 2 minutos timeout
+				timeout: 120000
 			});
 
 			console.log('Docker Compose Output:', stdout);
