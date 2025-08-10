@@ -40,3 +40,4 @@ mta_archives/
 .env.local
 .env.production
 .env.staging
+.env
