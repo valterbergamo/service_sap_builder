@@ -19,3 +19,4 @@ services:
 networks:
   sap-builder-network:
     driver: bridge
+    external: true
