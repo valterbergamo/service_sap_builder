@@ -1,7 +1,7 @@
 sap.ui.define(['./_BaseController'], function (BaseController) {
 	'use strict';
 
-	return BaseController.extend('xcop.fsc.service.controller.App', {
+	return BaseController.extend('builder.fsc.service.controller.App', {
 		onInit: async function () {
 			// apply content density mode to root view
 			let oView = this.getView();

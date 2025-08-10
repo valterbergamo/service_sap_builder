@@ -9,7 +9,7 @@ sap.ui.define(
   function (BaseController, JSONModel, formatter, Filter, FilterOperator) {
     'use strict'
 
-    return BaseController.extend('xcop.fsc.service.controller.Home', {
+    return BaseController.extend('builder.fsc.service.controller.Home', {
       onInit: function () {
         //debugger
 

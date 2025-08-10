@@ -4,7 +4,7 @@
     xmlns:core="sap.ui.core"
     xmlns:tnt="sap.tnt"
     xmlns:f="sap.f"
-    controllerName="xcop.fsc.service.controller.App"
+    controllerName="builder.fsc.service.controller.App"
 >
     <tnt:ToolPage
         id="app"
@@ -13,7 +13,7 @@
         <tnt:header>
             <tnt:ToolHeader>
                 <core:Fragment
-                    fragmentName="xcop.fsc.service.view.fragments.fmHeader"
+                    fragmentName="builder.fsc.service.view.fragments.fmHeader"
                     type="XML"
                 />
             </tnt:ToolHeader>

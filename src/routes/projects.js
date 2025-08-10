@@ -368,8 +368,8 @@ function isTextFile(filename) {
 async function copyFileWithSubstitution(srcPath, destPath, namespace) {
 	let content = await fs.readFile(srcPath, 'utf8');
 	
-	// Substituir todas as ocorrências de xcop.fsc.service pelo namespace
-	content = content.replace(/xcop\.fsc\.service/g, namespace);
+	// Substituir todas as ocorrências de builder.fsc.service pelo namespace
+	content = content.replace(/builder\.fsc\.service/g, namespace);
 	
 	await fs.writeFile(destPath, content, 'utf8');
 }
@@ -533,6 +533,114 @@ router.delete('/:id/files', async (req, res, next) => {
 			id,
 			filepath,
 			deleted: true
+		});
+	} catch (err) {
+		next(err);
+	}
+});
+
+// DELETE /projects/:id/folders -> deletar pasta (vazia ou com conteúdo)
+router.delete('/:id/folders', async (req, res, next) => {
+	try {
+		const { id } = req.params;
+		const { folderpath } = req.query;
+
+		if (!isValidProjectId(id)) {
+			return res.status(400).json({ error: 'ID de projeto inválido' });
+		}
+
+		if (!folderpath) {
+			return res.status(400).json({ error: 'Parâmetro folderpath é obrigatório' });
+		}
+
+		const projectPath = resolveProjectPath(id);
+		const fullFolderPath = path.join(projectPath, folderpath);
+
+		// Verificar se o projeto existe
+		try {
+			await fs.access(projectPath);
+		} catch (e) {
+			return res.status(404).json({ error: 'Projeto não encontrado' });
+		}
+
+		// Verificar se a pasta está dentro do projeto (segurança)
+		if (!fullFolderPath.startsWith(projectPath)) {
+			return res.status(400).json({ error: 'Caminho de pasta inválido' });
+		}
+
+		// Não permitir deletar a pasta raiz do projeto
+		if (fullFolderPath === projectPath) {
+			return res.status(400).json({ error: 'Não é possível deletar a pasta raiz do projeto' });
+		}
+
+		// Verificar se a pasta existe
+		let folderStats;
+		try {
+			folderStats = await fs.stat(fullFolderPath);
+		} catch (e) {
+			return res.status(404).json({ error: 'Pasta não encontrada' });
+		}
+
+		// Verificar se é realmente uma pasta
+		if (!folderStats.isDirectory()) {
+			return res.status(400).json({ error: 'O caminho especificado não é uma pasta' });
+		}
+
+		// Deletar a pasta recursivamente (com todo o conteúdo)
+		await fs.rm(fullFolderPath, { recursive: true, force: true });
+
+		res.json({
+			id,
+			folderpath,
+			deleted: true,
+			message: 'Pasta deletada com sucesso (incluindo todo o conteúdo)'
+		});
+	} catch (err) {
+		next(err);
+	}
+});
+
+// DELETE /projects/:id -> deletar projeto inteiro
+router.delete('/:id', async (req, res, next) => {
+	try {
+		const { id } = req.params;
+
+		if (!isValidProjectId(id)) {
+			return res.status(400).json({ error: 'ID de projeto inválido' });
+		}
+
+		const projectPath = resolveProjectPath(id);
+
+		// Verificar se o projeto existe
+		let projectStats;
+		try {
+			projectStats = await fs.stat(projectPath);
+		} catch (e) {
+			return res.status(404).json({ error: 'Projeto não encontrado' });
+		}
+
+		// Verificar se é realmente uma pasta
+		if (!projectStats.isDirectory()) {
+			return res.status(400).json({ error: 'Caminho do projeto não é uma pasta válida' });
+		}
+
+		// Antes de deletar, tentar parar containers Docker se existirem
+		try {
+			const dockerResult = await executeDockerCommand(projectPath, ['down', '--remove-orphans']);
+			console.log(`Docker containers parados para projeto ${id}:`, dockerResult.output);
+		} catch (dockerErr) {
+			// Se falhar, continua mesmo assim (pode não ter Docker)
+			console.warn(`Aviso: Não foi possível parar containers Docker para projeto ${id}:`, dockerErr.message);
+		}
+
+		// Deletar o projeto inteiro recursivamente
+		await fs.rm(projectPath, { recursive: true, force: true });
+
+		res.json({
+			id,
+			deleted: true,
+			path: projectPath,
+			message: 'Projeto deletado com sucesso (incluindo containers Docker)'
 		});
 	} catch (err) {
 		next(err);

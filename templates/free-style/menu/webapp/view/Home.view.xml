@@ -1,5 +1,5 @@
 <mvc:View
-    controllerName="xcop.fsc.service.controller.Home"
+    controllerName="builder.fsc.service.controller.Home"
     xmlns="sap.m"
     xmlns:l="sap.ui.layout"
     xmlns:mvc="sap.ui.core.mvc"

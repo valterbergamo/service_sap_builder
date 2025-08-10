@@ -25,7 +25,7 @@ sap.ui.define(
     var URLHelper = mobileLibrary.URLHelper;
 
     return CommomController.extend(
-      "xcop.fsc.service.controller._BaseController",
+      "builder.fsc.service.controller._BaseController",
       {
         /**
          * Convenience method for accessing the router.

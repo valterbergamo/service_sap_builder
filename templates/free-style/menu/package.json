@@ -1,5 +1,5 @@
 {
-	"name": "xcop.fsc.service",
+	"name": "builder.fsc.service",
 	"version": "0.0.1",
 	"private": true,
 	"sapuxLayer": "CUSTOMER_BASE",

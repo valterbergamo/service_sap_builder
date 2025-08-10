@@ -1,7 +1,7 @@
 {
     "_version": "1.17.0",
     "sap.app": {
-        "id": "xcop.fsc.service",
+        "id": "builder.fsc.service",
         "type": "application",
         "i18n": "i18n/i18n.properties",
         "applicationVersion": {
@@ -17,7 +17,7 @@
         },
         "dataSources": {
             "mainService": {
-                "uri": "/sap/opu/odata/xcop/FSC_SERVICE_SRV/",
+                "uri": "/sap/opu/odata/builder/FSC_SERVICE_SRV/",
                 "type": "OData",
                 "settings": {
                     "annotations": [
@@ -75,7 +75,7 @@
             "i18n": {
                 "type": "sap.ui.model.resource.ResourceModel",
                 "settings": {
-                    "bundleName": "xcop.fsc.service.i18n.i18n"
+                    "bundleName": "builder.fsc.service.i18n.i18n"
                 }
             },
             "": {
@@ -99,7 +99,7 @@
             "config": {
                 "routerClass": "sap.f.routing.Router",
                 "viewType": "XML",
-                "viewPath": "xcop.fsc.service.view",
+                "viewPath": "builder.fsc.service.view",
                 "controlId": "mainContents",
                 "transition": "slide",
                 "controlAggregation": "pages",
@@ -136,7 +136,7 @@
             }
         },
         "rootView": {
-            "viewName": "xcop.fsc.service.view.App",
+            "viewName": "builder.fsc.service.view.App",
             "type": "XML",
             "async": true,
             "id": "app"

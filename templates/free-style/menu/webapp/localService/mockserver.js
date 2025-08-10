@@ -1,7 +1,7 @@
 sap.ui.define(['sap/ui/core/util/MockServer'], function(MockServer) {
     'use strict';
     var oMockServer,
-        _sAppModulePath = 'xcop/fsc/service/',
+        _sAppModulePath = 'builder/fsc/service/',
         _sJsonFilesModulePath = _sAppModulePath + 'localService/mockdata';
 
     return {

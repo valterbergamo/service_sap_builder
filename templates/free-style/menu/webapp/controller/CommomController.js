@@ -15,7 +15,7 @@ sap.ui.define(
   
       var MessageBox = mobileLibrary.MessageBox;
   
-      return Controller.extend("xcop.fsc.service.controller.CommomController", {
+      return Controller.extend("builder.fsc.service.controller.CommomController", {
           /**
            * Incluir funções comuns do aplicativo, não alterar o Base Controller pois é comum a todos aplicativos.
            */

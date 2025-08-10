@@ -8,7 +8,7 @@ sap.ui.define(
   function (UIComponent, Device, models, ErrorHandler) {
     "use strict";
 
-    return UIComponent.extend("xcop.fsc.service.Component", {
+    return UIComponent.extend("builder.fsc.service.Component", {
       metadata: {
         manifest: "json",
       },

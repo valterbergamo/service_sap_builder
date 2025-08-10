@@ -6,14 +6,14 @@ sap.ui.define([
 ], function (UI5Object, MessageBox, Filter, FilterOperator) {
     "use strict";
 
-    return UI5Object.extend("xcop.fsc.service.controller._ErrorHandler", {
+    return UI5Object.extend("builder.fsc.service.controller._ErrorHandler", {
 
         /**
          * Handles application errors by automatically attaching to the model events and displaying errors when needed.
          * @class
          * @param {sap.ui.core.UIComponent} oComponent reference to the app's component
          * @public
-         * @alias xcop.fsc.service.controller.ErrorHandler
+         * @alias builder.fsc.service.controller.ErrorHandler
          */
         constructor: function (oComponent) {
             var oMessageManager = sap.ui.getCore().getMessageManager(),
