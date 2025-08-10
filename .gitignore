@@ -13,7 +13,7 @@ target/
 # Web IDE, App Studio
 .che/
 .gen/
-.env/
+
 
 # MTA
 *_mta_build_tmp
@@ -34,3 +34,9 @@ mta_archives/
 
 # @cap-js/cds-typer
 @cds-models
+
+# Environment variables - NEVER commit sensitive data
+.env
+.env.local
+.env.production
+.env.staging
